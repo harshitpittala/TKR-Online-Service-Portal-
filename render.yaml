@@ -1,0 +1,36 @@
+# render.yaml — Render deployment configuration for TKR Portal backend
+#
+# HOW TO USE:
+#   1. Push the backend/ folder to a GitHub repository.
+#   2. On render.com → New → Blueprint → connect your repo.
+#   3. Render will read this file and automatically:
+#      - Create a free PostgreSQL database
+#      - Deploy the FastAPI backend
+#      - Run the seed script to create all users
+#
+# After deploy, set FRONTEND_URL in the Render dashboard to your Netlify URL.
+
+services:
+  - type: web
+    name: tkr-portal-backend
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python seed.py
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: tkr-portal-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://YOUR-NETLIFY-APP.netlify.app
+      - key: PYTHON_VERSION
+        value: "3.12"
+
+databases:
+  - name: tkr-portal-db
+    databaseName: tkr_portal
+    user: tkr_admin
+    plan: free
